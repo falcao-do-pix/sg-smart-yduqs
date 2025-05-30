@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard - Smart YDUQS{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Estilos adicionais, se necessário */
+        .chart-container {
+            position: relative;
+            height: 40vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <div class="flex h-screen bg-gray-50">
+        <aside class="w-64 bg-gray-900 text-white flex flex-col p-4 shadow-lg">
+            <div class="flex items-center mb-8">
+                <i class="fas fa-tachometer-alt text-2xl text-blue-400 mr-3"></i>
+                <h1 class="text-xl font-bold">Dashboard</h1>
+            </div>
+            <nav class="flex-1">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'dashboard' %}" class="flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                            <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                            Visão Geral
+                        </a>
+                    </li>
+                    {# Adicione mais links de navegação aqui #}
+                </ul>
+            </nav>
+            <div class="border-t border-gray-700 pt-4">
+                 {% if user.is_authenticated %}
+                    {# --- Assumindo que a URL de logout está correta --- #}
+                    <a href="{% url 'logout_dashboard' %}" class="flex items-center p-3 rounded-lg text-red-400 hover:bg-red-600 hover:text-white transition-colors">
+                        <i class="fas fa-sign-out-alt w-5 h-5 mr-3"></i>
+                        Sair
+                    </a>
+                 {% else %}
+                     {# --- Assumindo que a URL de login está correta --- #}
+                     <a href="{% url 'login_dashboard' %}" class="flex items-center p-3 rounded-lg text-green-400 hover:bg-green-600 hover:text-white transition-colors">
+                        <i class="fas fa-sign-in-alt w-5 h-5 mr-3"></i>
+                        Entrar
+                    </a>
+                 {% endif %}
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm p-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800">
+                            {% block page_title %}Visão Geral{% endblock %}
+                        </h2>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <div class="flex items-center">
+                        {# --- CORRIGIDO AQUI --- #}
+                        {# Usa 'user.nome' e, se não houver, usa 'user.matricula' #}
+                        <span class="text-gray-600 mr-3">Olá, {{ user.nome|default:user.matricula }}</span>
+                         <i class="fas fa-user-circle text-2xl text-gray-600"></i>
+                    </div>
+                    {% endif %}
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6 md:p-8">
+                {% block content %}
+                    {# O conteúdo específico da página será inserido aqui #}
+                {% endblock %}
+            </main>
+        </div>
+    </div>
+
+</body>
+</html>

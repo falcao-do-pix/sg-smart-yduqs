@@ -1,0 +1,33 @@
+{% extends "portal_aluno/base.html" %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
+    <h2 class="text-2xl font-bold text-center mb-4">Login do Aluno</h2>
+
+    {% if messages %}
+    <ul class="mb-4">
+        {% for message in messages %}
+            <li class="text-red-600 text-sm">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label for="matricula" class="block text-gray-700">Matrícula:</label>
+            <input type="text" name="matricula" id="matricula" class="w-full px-3 py-2 border rounded" required>
+        </div>
+        <div>
+            <label for="senha" class="block text-gray-700">Senha:</label>
+            <input type="password" name="senha" id="senha" class="w-full px-3 py-2 border rounded" required>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded">Entrar</button>
+    </form>
+
+    <p class="text-sm text-center mt-4">
+        Ainda não tem uma conta?
+        <a href="{% url 'cadastro_aluno' %}" class="text-blue-600 hover:underline">Cadastre-se</a>
+    </p>
+</div>
+{% endblock %}

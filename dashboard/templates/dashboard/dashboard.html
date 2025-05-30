@@ -1,0 +1,268 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Visão Geral - Dashboard{% endblock %}
+
+{% block page_title %}Visão Geral{% endblock %} {# Define o título no header do base.html #}
+
+{% block content %}
+
+<div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Filtros</h3>
+    <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div>
+            <label for="curso" class="block text-sm font-medium text-gray-700">Curso:</label>
+            <select name="curso" id="curso" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
+                <option value="">Todos os cursos</option>
+                {# Assumindo que alunos_por_curso contém os cursos para o filtro #}
+                {% for curso in alunos_por_curso %}
+                    <option value="{{ curso.curso }}" {% if request.GET.curso == curso.curso %}selected{% endif %}>{{ curso.curso }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="periodo" class="block text-sm font-medium text-gray-700">Período:</label>
+            <select name="periodo" id="periodo" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
+                <option value="7d" {% if request.GET.periodo == '7d' %}selected{% endif %}>Últimos 7 dias</option>
+                <option value="30d" {% if request.GET.periodo == '30d' %}selected{% endif %}>Últimos 30 dias</option>
+                <option value="" {% if not request.GET.periodo %}selected{% endif %}>Todo o período</option>
+            </select>
+        </div>
+        <div>
+            <label for="status" class="block text-sm font-medium text-gray-700">Status:</label>
+            <select name="status" id="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
+                <option value="">Todos</option>
+                <option value="P" {% if request.GET.status == 'P' %}selected{% endif %}>Presentes</option> {# Ajustei para 'Presentes' #}
+                <option value="A" {% if request.GET.status == 'A' %}selected{% endif %}>Atrasados</option>
+                <option value="F" {% if request.GET.status == 'F' %}selected{% endif %}>Faltas</option> {# Adicionei Faltas #}
+            </select>
+        </div>
+        <div class="flex justify-start sm:justify-end">
+             <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white px-6 py-2 rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors flex items-center justify-center">
+                 <i class="fas fa-filter mr-2"></i>
+                 Filtrar
+             </button>
+        </div>
+    </form>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4 hover:shadow-xl transition-shadow">
+        <div class="bg-blue-500 text-white p-4 rounded-full"> <i class="fas fa-users text-2xl"></i> </div>
+        <div>
+            <p class="text-gray-500 text-sm">Total de Alunos</p>
+            <h3 class="text-3xl font-bold text-gray-900">{{ total_alunos|default:"0" }}</h3>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4 hover:shadow-xl transition-shadow">
+         <div class="bg-green-500 text-white p-4 rounded-full"> <i class="fas fa-user-check text-2xl"></i> </div>
+        <div>
+            <p class="text-gray-500 text-sm">Alunos Pontuais</p>
+            <h3 class="text-3xl font-bold text-gray-900">{{ alunos_pontuais|default:"0" }}</h3>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4 hover:shadow-xl transition-shadow">
+         <div class="bg-yellow-500 text-white p-4 rounded-full"> <i class="fas fa-user-clock text-2xl"></i> </div>
+        <div>
+            <p class="text-gray-500 text-sm">Alunos Atrasados</p>
+            <h3 class="text-3xl font-bold text-gray-900">{{ alunos_atrasados|default:"0" }}</h3>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4 hover:shadow-xl transition-shadow">
+         <div class="bg-red-500 text-white p-4 rounded-full"> <i class="fas fa-user-times text-2xl"></i> </div>
+        <div>
+            <p class="text-gray-500 text-sm">Média de Atrasos</p> {# Ou talvez 'Total de Faltas'? Ajuste conforme a métrica #}
+            <h3 class="text-3xl font-bold text-gray-900">{{ media_atrasos|default:"0" }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-lg font-bold mb-4 text-gray-800">Alunos por Curso</h3>
+        <div class="chart-container">
+            <canvas id="alunosPorCurso"></canvas>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-lg font-bold mb-4 text-gray-800">Pontuais vs Atrasados</h3>
+        <div class="chart-container flex justify-center items-center">
+             {# Para gráficos Pie/Doughnut, um container menor pode ser melhor #}
+             <canvas id="pontuaisVsAtrasados" style="max-width: 300px; max-height: 300px;"></canvas>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg lg:col-span-2"> {# Ocupa 2 colunas em telas grandes #}
+        <h3 class="text-lg font-bold mb-4 text-gray-800">Evolução Diária por Status</h3>
+         <div class="chart-container">
+            <canvas id="evolucaoPorStatus"></canvas>
+         </div>
+    </div>
+     <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-lg font-bold mb-4 text-gray-800">Distribuição de Horários de Entrada</h3>
+         <div class="chart-container">
+            <canvas id="graficoHorariosEntrada"></canvas>
+         </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-lg font-bold mb-4 text-gray-800">Distribuição por Dia da Semana</h3>
+         <div class="chart-container">
+            <canvas id="graficoDiasSemana"></canvas>
+         </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-lg font-bold mb-4 text-gray-800">Percentual de Presença por Curso</h3>
+         <div class="chart-container flex justify-center items-center">
+             <canvas id="percentualPresencaCurso" style="max-width: 300px; max-height: 300px;"></canvas>
+         </div>
+    </div>
+     <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-lg font-bold mb-4 text-gray-800">Taxa de Presença Diária (%)</h3>
+         <div class="chart-container">
+            <canvas id="graficoTaxaPresenca"></canvas>
+         </div>
+    </div>
+</div>
+
+{# Mantém o script de filtros e gráficos #}
+<script>
+    // Filtros - Prevenindo recarregamento padrão e usando GET
+    document.querySelector("form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        let formData = new FormData(this);
+        let params = new URLSearchParams(formData).toString();
+        window.location.href = window.location.pathname + "?" + params;
+    });
+
+    // Função para gerar cores aleatórias para os gráficos
+    function generateColors(numColors) {
+        const colors = [];
+        for (let i = 0; i < numColors; i++) {
+            const r = Math.floor(Math.random() * 200);
+            const g = Math.floor(Math.random() * 200);
+            const b = Math.floor(Math.random() * 200);
+            colors.push(`rgba(${r}, ${g}, ${b}, 0.6)`);
+        }
+        return colors;
+    }
+
+    // Configuração global para Chart.js (opcional, mas útil)
+    Chart.defaults.font.family = 'sans-serif';
+    Chart.defaults.responsive = true;
+    Chart.defaults.maintainAspectRatio = false; // Importante para usar .chart-container
+
+    // Dados (assumindo que vêm da view Django como antes)
+    const evolucaoData = {{ evolucao_por_status|safe|default:"{}" }};
+    const alunosPorCurso = {{ alunos_por_curso|safe|default:"[]" }};
+    const alunosPontuais = {{ alunos_pontuais|default:"0" }};
+    const alunosAtrasados = {{ alunos_atrasados|default:"0" }};
+    const percentualPresencaCurso = {{ percentual_por_curso|safe|default:"[]" }};
+    const labelsHorarios = {{ labels_horarios|safe|default:"[]" }};
+    const valoresHorarios = {{ valores_horarios|safe|default:"[]" }};
+    const labelsDiasSemana = {{ labels_dias_semana|safe|default:"[]" }};
+    const valoresDiasSemana = {{ valores_dias_semana|safe|default:"[]" }};
+    const taxaDatas = {{ taxa_datas|safe|default:"[]" }};
+    const taxaValores = {{ taxa_valores|safe|default:"[]" }};
+
+    // --- Inicialização dos Gráficos ---
+
+    // Gráfico: Alunos por Curso
+    const ctx1 = document.getElementById('alunosPorCurso')?.getContext('2d');
+    if (ctx1) new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: alunosPorCurso.map(item => item.curso),
+            datasets: [{
+                label: 'Quantidade de Alunos',
+                data: alunosPorCurso.map(item => item.total),
+                backgroundColor: generateColors(alunosPorCurso.length),
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    // Gráfico: Pontuais vs Atrasados
+    const ctx2 = document.getElementById('pontuaisVsAtrasados')?.getContext('2d');
+    if (ctx2) new Chart(ctx2, {
+        type: 'pie',
+        data: {
+            labels: ['Pontuais', 'Atrasados'],
+            datasets: [{
+                data: [alunosPontuais, alunosAtrasados],
+                backgroundColor: ['#4CAF50', '#FFC107'], // Verde e Amarelo
+                hoverOffset: 4
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: true } // Pie pode manter aspect ratio
+    });
+
+    // Gráfico: Evolução Diária
+    const labelsEvolucao = Object.keys(evolucaoData);
+    const pontuaisEvolucao = labelsEvolucao.map(d => evolucaoData[d].P || 0);
+    const atrasadosEvolucao = labelsEvolucao.map(d => evolucaoData[d].A || 0);
+    const faltasEvolucao = labelsEvolucao.map(d => evolucaoData[d].F || 0);
+    const ctx3 = document.getElementById('evolucaoPorStatus')?.getContext('2d');
+    if (ctx3) new Chart(ctx3, {
+        type: 'line',
+        data: {
+            labels: labelsEvolucao,
+            datasets: [
+                { label: 'Pontuais', data: pontuaisEvolucao, borderColor: '#4CAF50', backgroundColor: 'rgba(76, 175, 80, 0.2)', fill: true, tension: 0.1 },
+                { label: 'Atrasados', data: atrasadosEvolucao, borderColor: '#FFC107', backgroundColor: 'rgba(255, 193, 7, 0.2)', fill: true, tension: 0.1 },
+                { label: 'Faltas', data: faltasEvolucao, borderColor: '#F44336', backgroundColor: 'rgba(244, 67, 54, 0.2)', fill: true, tension: 0.1 }
+            ]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    // Gráfico: Horários de Entrada
+    const ctx4 = document.getElementById('graficoHorariosEntrada')?.getContext('2d');
+    if (ctx4) new Chart(ctx4, {
+        type: 'bar',
+        data: {
+            labels: labelsHorarios,
+            datasets: [{ label: 'Número de Entradas', data: valoresHorarios, backgroundColor: 'rgba(33, 150, 243, 0.6)', borderColor: 'rgba(33, 150, 243, 1)', borderWidth: 1 }]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    // Gráfico: Dias da Semana
+    const ctx5 = document.getElementById('graficoDiasSemana')?.getContext('2d');
+    if (ctx5) new Chart(ctx5, {
+        type: 'bar',
+        data: {
+            labels: labelsDiasSemana,
+            datasets: [{ label: 'Quantidade de Presenças', data: valoresDiasSemana, backgroundColor: 'rgba(76, 175, 80, 0.6)', borderColor: 'rgba(76, 175, 80, 1)', borderWidth: 1 }]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+     // Gráfico: Percentual Presença por Curso
+    const ctxPerc = document.getElementById('percentualPresencaCurso')?.getContext('2d');
+    if (ctxPerc) new Chart(ctxPerc, {
+        type: 'doughnut',
+        data: {
+            labels: percentualPresencaCurso.map(item => item.curso),
+            datasets: [{
+                data: percentualPresencaCurso.map(item => item.percentual),
+                backgroundColor: generateColors(percentualPresencaCurso.length),
+                hoverOffset: 4
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: true }
+    });
+
+    // Gráfico: Taxa de Presença Diária
+    const ctx6 = document.getElementById('graficoTaxaPresenca')?.getContext('2d');
+    if (ctx6) new Chart(ctx6, {
+        type: 'line',
+        data: {
+            labels: taxaDatas,
+            datasets: [{ label: 'Taxa de Presença (%)', data: taxaValores, fill: false, borderColor: '#FF6384', backgroundColor: 'rgba(255, 99, 132, 0.2)', tension: 0.1 }]
+        },
+        options: { scales: { y: { min: 0, max: 100, ticks: { callback: value => value + '%' } } } }
+    });
+
+</script>
+
+{% endblock %}

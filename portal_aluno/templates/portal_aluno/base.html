@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Portal do Aluno{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<nav class="bg-blue-600 p-4 shadow-md">
+    <div class="container mx-auto flex justify-between items-center">
+        <a href="{% if user.is_authenticated %}{% url 'painel_aluno' %}{% else %}{% url 'login_aluno' %}{% endif %}" class="text-white text-xl font-semibold hover:text-blue-200 transition-colors">
+            Smart YDUQS - Portal
+        </a>
+        {% if user.is_authenticated %}
+            <div class="flex items-center gap-4">
+                <span class="text-white">Olá, {{ user.nome|default:user.get_username }}</span>
+                <a href="{% url 'logout_aluno' %}" class="text-white bg-red-500 px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium">Sair</a>
+            </div>
+        {% else %}
+            <div>
+                {% if request.resolver_match.url_name == 'login_aluno' %}
+                    <a href="{% url 'cadastro_aluno' %}" class="text-white hover:text-blue-200 transition-colors">Criar Conta</a>
+                {% elif request.resolver_match.url_name == 'cadastro_aluno' or request.resolver_match.url_name == 'selecionar_curso' %}
+                     <a href="{% url 'login_aluno' %}" class="text-white hover:text-blue-200 transition-colors">Já tenho conta</a>
+                {% else %}
+                    <a href="{% url 'login_aluno' %}" class="text-white bg-green-500 px-3 py-1 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium">Entrar</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</nav>
+
+<main class="container mx-auto mt-8 px-4 flex-grow">
+
+    {% if request.resolver_match %}
+        {# --- Seção de Header Personalizado da Página --- #}
+        {% if request.resolver_match.url_name == 'login_aluno' %}
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8 text-center">
+                <h1 class="text-3xl font-bold mb-2 text-blue-700">Bem-vindo(a) de Volta!</h1>
+                <p class="text-gray-600">Acesse sua conta para continuar.</p>
+            </div>
+        {% elif request.resolver_match.url_name == 'cadastro_aluno' %}
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8 text-center">
+                <h1 class="text-3xl font-bold mb-2 text-blue-700">Crie sua Conta</h1>
+                <p class="text-gray-600">Passo 1 de 2: Informações básicas.</p>
+            </div>
+        {% elif request.resolver_match.url_name == 'selecionar_curso' %}
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8 text-center">
+                <h1 class="text-3xl font-bold mb-2 text-blue-700">Quase lá!</h1>
+                <p class="text-gray-600">Passo 2 de 2: Selecione seu curso.</p>
+            </div>
+        {% elif request.resolver_match.url_name == 'painel_aluno' %}
+            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-lg shadow-lg mb-8 text-white">
+                <h1 class="text-3xl font-bold mb-2">Seu Painel de Controle</h1>
+                <p>Aqui você encontra suas informações e acessos rápidos.</p>
+            </div>
+        {% elif request.resolver_match.url_name == 'editar_perfil' %}
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <h1 class="text-3xl font-bold mb-2 text-gray-700">Editar Perfil</h1>
+                <p class="text-gray-600">Mantenha seus dados atualizados.</p>
+            </div>
+        {% endif %}
+    {% endif %}
+    {# --- Fim da Seção de Header Personalizado --- #}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="bg-gray-800 text-white text-center p-4 mt-auto">
+    <p>&copy; {% now "Y" %} Smart YDUQS. Todos os direitos reservados.</p>
+</footer>
+
+</body>
+</html>

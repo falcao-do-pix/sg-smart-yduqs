@@ -1,0 +1,25 @@
+{% extends "portal_aluno/base.html" %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
+    <h2 class="text-2xl font-bold mb-4 text-center">Selecione seu Curso</h2>
+
+    {% if cursos %}
+    <form method="post" class="space-y-4 flex flex-col">
+        {% csrf_token %}
+        <div>
+            <label class="block text-gray-700">Curso</label>
+            <select name="curso" required class="w-full px-3 py-2 border rounded">
+                <option value="" selected disabled>Selecione...</option>
+                {% for curso in cursos %}
+                    <option value="{{ curso.id }}">{{ curso.id }} - {{ curso.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Finalizar Cadastro</button>
+    </form>
+    {% else %}
+    <p class="text-red-600 text-center">Nenhum curso disponível no momento.</p>
+    {% endif %}
+</div>
+{% endblock %}
