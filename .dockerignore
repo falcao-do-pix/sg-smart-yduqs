@@ -19,5 +19,4 @@ mediafiles/
 .env
 docker-compose.yml
 Dockerfile
-*.sh
 init-db/
