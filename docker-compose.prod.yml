@@ -74,9 +74,3 @@ volumes:
   media_volume:
   postgres_data:
   mysql_data:
-```
-
-### Resumo da Correção
-
-* **`db_postgres:`**: Adicionado `env_file: - .env.prod`.
-* **`db_mysql:`**: Adicionado `env_file: - .env.prod`.
