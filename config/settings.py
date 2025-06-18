@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -104,20 +105,19 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'smart_yduqs',
-        'USER': 'root',
-        'PASSWORD': '123qwe123',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.getenv('MYSQL_DB', 'smart_yduqs'),
+        'USER': os.getenv('MYSQL_USER', 'django_user'),
+        'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+        'HOST': os.getenv('MYSQL_HOST', 'localhost'), # No Docker, deve ser 'db_mysql'
+        'PORT': os.getenv('MYSQL_PORT', '3306'),
     },
-    # Novo banco para presença (PostgreSQL)
     'presenca_postgres': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'smart_yduqs_presenca',
-        'USER': 'postgres',
-        'PASSWORD': 'P@ssw0rd!23',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('POSTGRES_DB', 'smart_yduqs_presenca'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'), # No Docker, deve ser 'db_postgres'
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
 
