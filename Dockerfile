@@ -30,7 +30,7 @@
     RUN apt-get update && \
         apt-get install -y --no-install-recommends \
             libpq5 \
-            default-mysql-client && \
+            default-mysql-client \
             netcat-openbsd && \
         rm -rf /var/lib/apt/lists/*
     
