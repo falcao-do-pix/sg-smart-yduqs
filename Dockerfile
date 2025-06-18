@@ -31,6 +31,7 @@
         apt-get install -y --no-install-recommends \
             libpq5 \
             default-mysql-client && \
+            netcat-openbsd && \
         rm -rf /var/lib/apt/lists/*
     
     # Copia o entrypoint primeiro E TORNA EXECUTÁVEL COMO ROOT
