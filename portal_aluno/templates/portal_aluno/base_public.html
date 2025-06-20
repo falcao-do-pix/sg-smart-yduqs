@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}SG Smart YDUQS{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<!-- Navbar para páginas públicas -->
+<nav class="bg-blue-600 p-4 shadow-md">
+    <div class="container mx-auto flex justify-between items-center">
+        <!-- O link principal leva para a própria home -->
+        <a href="{% url 'home' %}" class="text-white text-xl font-semibold hover:text-blue-200 transition-colors">
+            Smart YDUQS - Portal
+        </a>
+        <!-- Links estáticos para as páginas de login -->
+        <div class="space-x-4">
+            <a href="{% url 'login_aluno' %}" class="text-white hover:text-blue-200 transition-colors">Portal do Aluno</a>
+            <a href="{% url 'login_dashboard' %}" class="text-white hover:text-blue-200 transition-colors">Dashboard</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Conteúdo principal da página -->
+<main class="container mx-auto mt-8 px-4 flex-grow">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Rodapé -->
+<footer class="bg-gray-800 text-white text-center p-4 mt-auto">
+    <p>&copy; {% now "Y" %} Smart YDUQS. Todos os direitos reservados.</p>
+</footer>
+
+</body>
+</html>
