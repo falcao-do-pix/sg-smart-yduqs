@@ -20,7 +20,7 @@ def home_view(request):
     """
     return render(request, 'portal_aluno/home.html')
 
-@login_required
+@student_required
 def painel_aluno(request):
     """
     Exibe o painel do aluno, buscando os dados da API /api/aluno/me/.
@@ -36,13 +36,7 @@ def painel_aluno(request):
 
     if not aluno_data:
         messages.error(request, "Sua sessão expirou ou não foi possível carregar seus dados. Por favor, faça login novamente.")
-        # --- ADICIONADO LOGOUT AQUI PARA QUEBRAR O LOOP ---
         logout(request) # Limpa a sessão Django
-        if 'access_token' in request.session: # Opcional: limpar explicitamente
-            del request.session['access_token']
-        if 'refresh_token' in request.session: # Opcional: limpar explicitamente
-            del request.session['refresh_token']
-        # --- FIM DA ADIÇÃO ---
         return redirect('login_aluno')
 
     # Passa os dados do aluno como contexto para o template
@@ -190,9 +184,9 @@ def buscar_cursos(request):
     cursos = buscar_cursos_por_nome(query)
     return JsonResponse(cursos, safe=False)
 
-
+@admin_logout_required
 def login_view(request):
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and not request.user.is_staff:
         return redirect('painel_aluno')
 
     if request.method == "POST":
@@ -200,12 +194,11 @@ def login_view(request):
         senha = request.POST.get("senha")
 
         payload = {
-            "matricula": matricula_input,  # <--- CORRIGIDO AQUI!
+            "matricula": matricula_input,
             "password": senha
         }
 
         try:
-            # Supondo que o endpoint esteja no app gerenciador
             # Verifique se settings.GERENCIADOR_API_URL está correto
             api_url = settings.GERENCIADOR_API_URL + "/api/token/"
             response = requests.post(api_url, json=payload)
@@ -216,26 +209,21 @@ def login_view(request):
                 request.session["access_token"] = data["access"]
                 request.session["refresh_token"] = data["refresh"]
 
-                # É crucial logar o usuário no sistema de autenticação do Django
-                # para que @login_required funcione nas outras views do portal_aluno.
-                # Como estamos usando Simple JWT, a autenticação "real" é via token.
-                # Mas para as views do portal_aluno, precisamos de uma sessão Django.
-                # Uma forma é usar o authenticate com o backend customizado (se ele retornar o usuário).
+
                 user = authenticate(request, matricula=matricula_input, password=senha)
                 if user is not None:
-                    login(request, user) # Cria a sessão Django
-                    return redirect("painel_aluno")
+                    # Verifica se o utilizador que está a tentar logar-se não é um staff
+                    if user.is_staff or user.is_superuser:
+                        messages.error(request, "Credenciais de administrador não são permitidas no portal do aluno.")
+                    else:
+                        login(request, user)
+                        return redirect("painel_aluno")
                 else:
                     # Se authenticate falhou mesmo com token OK (estranho), avise.
                     messages.error(request, "Erro ao iniciar sessão local. Tente novamente.")
 
             else:
                 messages.error(request, "Matrícula ou senha inválida.")
-                try:
-                    error_detail = response.json()
-                    print(f"Erro da API de token: {error_detail}")
-                except ValueError:
-                    print(f"Erro da API de token (não JSON): {response.text}")
 
         except requests.exceptions.RequestException:
             messages.error(request, "Erro ao conectar com o servidor. Tente novamente.")
@@ -243,7 +231,14 @@ def login_view(request):
     return render(request, "portal_aluno/login.html")
 
 
-@login_required
+@login_required # O @login_required aqui é genérico e está correto
 def logout_view(request):
-    # Aqui você pode apenas redirecionar. O frontend limpa o token.
+    """
+    Faz o logout do utilizador, limpando a sessão Django e os tokens.
+    """
+    # ... (sua lógica de logout existente) ...
+    logout(request)
+    if 'access_token' in request.session: del request.session['access_token']
+    if 'refresh_token' in request.session: del request.session['refresh_token']
+    messages.success(request, "Você saiu com sucesso.")
     return redirect('login_aluno')
