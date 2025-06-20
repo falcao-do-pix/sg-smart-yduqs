@@ -7,6 +7,7 @@ from collections import defaultdict
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import TruncDate
+from .decorators import staff_required
 import json
 import calendar
 
@@ -35,7 +36,7 @@ def logout_view_dashboard(request): # Nome da view pode ser diferente
     messages.info(request, "Você saiu com sucesso.")
     return redirect('login_dashboard') # Redireciona para a página de login do dashboard
 
-@login_required
+@staff_required
 def dashboard_view(request):
     # Filtros da URL
     curso = request.GET.get("curso", None)
