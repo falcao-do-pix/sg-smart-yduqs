@@ -10,6 +10,7 @@ from gerenciador.models import Aluno
 from django.contrib import messages
 # from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
+from .decorators import student_required, admin_logout_required
 from django.db.models import Q
 from django.conf import settings
 import requests
