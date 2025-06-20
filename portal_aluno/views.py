@@ -14,6 +14,11 @@ from django.db.models import Q
 from django.conf import settings
 import requests
 
+def home_view(request):
+    """
+    Renderiza a página inicial de apresentação do projeto.
+    """
+    return render(request, 'portal_aluno/home.html')
 
 @login_required
 def painel_aluno(request):
