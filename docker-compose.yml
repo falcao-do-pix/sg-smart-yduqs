@@ -1,60 +1,77 @@
+# A diretiva 'version' foi removida para compatibilidade com Docker Compose v2+
 services:
+  # Serviço da Aplicação Django
   django_app:
     build: .
-    container_name: django_smartyduqs
-    # O comando será executado pelo entrypoint.sh
+    container_name: django_smartyduqs_dev
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
-      - .:/app  # Monta o código local no container (ótimo para dev)
+      - .:/app  # Monta o código local para live-reloading
     ports:
       - "8000:8000"
     env_file:
-      - .env    # Carrega variáveis do arquivo .env
+      - .env    # Carrega as variáveis de ambiente do ficheiro .env
     depends_on:
       db_postgres:
         condition: service_healthy
       db_mysql:
         condition: service_healthy
+    networks:
+      - smartyduqs_net
 
+  # Serviço do Banco de Dados PostgreSQL
   db_postgres:
-    image: postgres:15-alpine # Imagem menor
-    container_name: postgres_smartyduqs
+    image: postgres:15-alpine
+    container_name: postgres_smartyduqs_dev
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-      # Você só precisa de 1 DB Postgres (smart_yduqs_presenca)
+    # O Docker Compose carrega o .env automaticamente,
+    # e estas variáveis são substituídas a partir dele.
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
     ports:
       - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - smartyduqs_net
 
+  # Serviço do Banco de Dados MySQL
   db_mysql:
     image: mysql:8.0
-    container_name: mysql_smartyduqs
-    command: --default-authentication-plugin=mysql_native_password # Compatibilidade
+    container_name: mysql_smartyduqs_dev
+    command: --default-authentication-plugin=mysql_native_password
     volumes:
       - mysql_data:/var/lib/mysql
-      # Você pode usar um script .sql para criar o DB e usuário se preferir
-      # - ./init-db/init-mysql.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DB}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      interval: 10s
       timeout: 5s
       retries: 5
     ports:
       - "3306:3306"
+    restart: unless-stopped
+    networks:
+      - smartyduqs_net
 
+# Define a rede personalizada para os serviços
+networks:
+  smartyduqs_net:
+    driver: bridge
+
+# Define os volumes nomeados para persistência de dados
 volumes:
   postgres_data:
   mysql_data:
+

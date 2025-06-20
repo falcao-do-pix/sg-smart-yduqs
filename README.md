@@ -21,6 +21,7 @@ Este é o repositório do projeto SG Smart YDUQS, um sistema de gestão acadêmi
 * **Bancos de Dados:** PostgreSQL e MySQL
 * **API:** Django REST Framework, Simple JWT
 * **Conteinerização:** Docker, Docker Compose
+* **Servidor de Produção:** Nginx, Gunicorn
 * **Frontend (Templates):** HTML, Tailwind CSS
 * **Gráficos:** Chart.js
 
@@ -30,15 +31,16 @@ Antes de começar, certifique-se de que você tem as seguintes ferramentas insta
 
 * [Git](https://git-scm.com/)
 * [Docker](https://www.docker.com/products/docker-desktop/)
-* [Docker Compose](https://docs.docker.com/compose/install/) (geralmente incluído com o Docker Desktop)
+* [Docker Compose](https://docs.docker.com/compose/install/)
 
-## 🚀 Instalação e Execução
+---
 
-Siga estes passos para configurar e rodar o ambiente de desenvolvimento localmente usando Docker.
+## 🚀 Ambiente de Desenvolvimento
+
+Siga estes passos para configurar e rodar o projeto localmente para fins de desenvolvimento.
 
 ### 1. Clonar o Repositório
 
-Abra seu terminal e clone o projeto do GitHub:
 ```bash
 git clone [https://github.com/falcao-do-pix/sg-smart-yduqs.git](https://github.com/falcao-do-pix/sg-smart-yduqs.git)
 cd sg-smart-yduqs
@@ -46,71 +48,97 @@ cd sg-smart-yduqs
 
 ### 2. Configurar Variáveis de Ambiente
 
-O projeto utiliza um arquivo `.env` para gerenciar configurações sensíveis e específicas do ambiente.
+O projeto utiliza um arquivo `.env` para as configurações.
 
-**a.** Crie o arquivo `.env` na raiz do projeto. Você pode copiar o `.env.example` se ele existir, ou criar um novo.
+**a.** Crie o arquivo `.env` na raiz do projeto. É recomendado copiar do exemplo (se existir) ou criar um novo.
 ```bash
+# Se houver um .env.example no projeto:
 cp .env.example .env
+
+# Ou crie um novo:
+touch .env
 ```
-*(Nota: Se o arquivo `.env.example` não existir no repositório, crie um arquivo `.env` manualmente).*
+
+**b.** Preencha o `.env` com as configurações para o ambiente de desenvolvimento.
 
 ### 3. Construir e Iniciar os Containers
 
-Com o Docker rodando e o arquivo `.env` configurado, execute o seguinte comando na raiz do projeto:
+Com o Docker rodando e o `.env` configurado, execute:
 
 ```bash
-sudo docker compose up --build
+sudo docker compose -f docker-compose.yml up --build
 ```
-
-* `--build`: Força a reconstrução da imagem do aplicativo. É essencial na primeira vez ou após alterar o `Dockerfile` ou `requirements.txt`.
-* O Docker irá construir a imagem do Django, baixar as imagens do PostgreSQL e MySQL, e iniciar todos os serviços.
-* O script `entrypoint.sh` será executado, aplicando as migrações e criando o superusuário.
+* `--build`: Força a reconstrução da imagem. Essencial na primeira vez.
+* Use `docker-compose.yml` para o ambiente de desenvolvimento.
 
 ### 4. Acessar a Aplicação
 
-Após os logs indicarem que o servidor Django iniciou, você pode acessar os diferentes portais:
+* **Portal do Aluno:** `http://localhost:8000/alunos/login/`
+* **Dashboard:** `http://localhost:8000/dashboard/login/`
+* **Django Admin:** `http://localhost:8000/admin/`
 
-* **Portal do Aluno (Login):** <http://localhost:8000/alunos/login/>
-* **Dashboard (Login):** <http://localhost:8000/dashboard/login/>
-* **Django Admin:** <http://localhost:8000/admin/>
-    * **Usuário:** `admin` (ou o que você definiu em `DJANGO_SUPERUSER_USERNAME`)
-    * **Senha:** `adminpass` (ou o que você definiu em `DJANGO_SUPERUSER_PASSWORD`)
+---
 
-## 💻 Desenvolvimento
+## ☁️ Ambiente de Produção
+
+Siga estes passos para implantar a aplicação em um servidor de produção (VPS na nuvem).
+
+### 1. Configurar o Servidor
+
+* Acesse seu servidor na nuvem (ex: Google Cloud, AWS).
+* Clone o repositório como no passo de desenvolvimento.
+* Certifique-se de que as portas **80 (HTTP)** e **443 (HTTPS)** estão abertas no firewall do seu provedor de nuvem.
+
+### 2. Configurar Variáveis de Ambiente para Produção
+
+**a.** Na raiz do projeto no servidor, crie o arquivo `.env.prod`. **Este arquivo nunca deve ser enviado para o Git.**
+
+
+### 3. Construir e Iniciar os Containers de Produção
+
+Use o arquivo `docker-compose.prod.yml` e passe o arquivo de ambiente explicitamente.
+
+```bash
+sudo docker compose --env-file .env.prod -f docker-compose.prod.yml up --build -d
+```
+* `-f docker-compose.prod.yml`: Especifica o arquivo de compose de produção.
+* `--env-file .env.prod`: Garante que as variáveis de produção sejam carregadas.
+* `-d`: Roda os containers em segundo plano (detached mode).
+
+### 4. Configurar HTTPS com Certbot
+
+Após iniciar os containers, siga o guia `httpsg_guide_final` para obter e instalar o certificado SSL/TLS.
+
+### 5. Acessar a Aplicação em Produção
+
+Após configurar o HTTPS, sua aplicação estará disponível de forma segura em: `https://seu_dominio.com`
+
+## 💻 Comandos Úteis do Docker
 
 ### Executar Comandos `manage.py`
 
-Para executar comandos como `makemigrations` ou `shell`, abra um **novo terminal**, navegue até a pasta do projeto e use `docker compose exec`:
-
 ```bash
-# Criar novas migrações
-sudo docker compose exec django_app python manage.py makemigrations
+# No ambiente de produção
+sudo docker compose -f docker-compose.prod.yml exec django_app python manage.py <comando>
 
-# Abrir o shell do Django
-sudo docker compose exec django_app python manage.py shell
+# Exemplo: Abrir o shell
+sudo docker compose -f docker-compose.prod.yml exec django_app python manage.py shell
 ```
 
 ### Visualizar Logs
 
-Você pode ver os logs em tempo real de cada serviço:
-
 ```bash
-# Logs do aplicativo Django
-sudo docker compose logs -f django_app
+# Ver logs de um serviço específico em tempo real
+sudo docker compose -f docker-compose.prod.yml logs -f <nome_do_servico>
 
-# Logs do PostgreSQL
-sudo docker compose logs -f db_postgres
-
-# Logs do MySQL
-sudo docker compose logs -f db_mysql
+# Exemplo: Ver logs do Nginx
+sudo docker compose -f docker-compose.prod.yml logs -f nginx
 ```
 
 ### Parar a Aplicação
 
-Para parar todos os containers, pressione `Ctrl+C` no terminal onde o `docker compose up` está rodando. Para parar e remover os containers, execute:
-
 ```bash
-sudo docker compose down
+# Para parar e remover os containers de produção
+sudo docker compose -f docker-compose.prod.yml down
 ```
-
-*(Os dados dos bancos de dados salvos nos volumes persistirão).*
+*(Os dados salvos nos volumes dos bancos de dados persistirão).*
